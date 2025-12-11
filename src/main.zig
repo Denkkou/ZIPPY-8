@@ -71,26 +71,25 @@ pub fn GeneratePixelGrid(cpu: *chip8) void {
     while (y < 32) : (y += 1) {
         var x: usize = 0;
         while (x < 64) : (x += 1) {
+            // Parse index from coordinates
             const index = y * 64 + x;
+
+            // Set colour based on value in gfx
+            var colour: rl.Color = undefined;
             if (cpu.gfx[index] == 0) {
-                rl.drawRectangle(
-                    @intCast(x),
-                    @intCast(y),
-                    screen_width / 64,
-                    screen_height / 32,
-                    rl.Color.black,
-                );
+                colour = rl.Color.black;
+            }
+            if (cpu.gfx[index] == 1) {
+                colour = rl.Color.white;
             }
 
-            if (cpu.gfx[index] == 1) {
-                rl.drawRectangle(
-                    @intCast(x),
-                    @intCast(y),
-                    screen_width / 64,
-                    screen_height / 32,
-                    rl.Color.white,
-                );
-            }
+            rl.drawRectangle(
+                @intCast(x * 10),
+                @intCast(y * 10),
+                screen_width / 64,
+                screen_height / 32,
+                colour,
+            );
         }
     }
 }
