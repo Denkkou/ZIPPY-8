@@ -22,69 +22,77 @@ pub fn main() !void {
     var cpu = try chip8.create(allocator);
     defer cpu.free();
 
-    // Load ROM
+    // TODO Load ROM
+    // ...
 
     // Initialise Raylib
-    rl.initWindow(screen_width, screen_height, "CHIP-8 Emulator");
+    rl.initWindow(
+        screen_width,
+        screen_height,
+        "CHIP-8 Emulator",
+    );
     defer rl.closeWindow();
 
-    var image: rl.Image = undefined;
-    var tex: rl.Texture2D = undefined;
-
+    // Core loop
     while (!rl.windowShouldClose()) {
-        // Get Input
-        // Cycle once
+        // TODO Get Input
+        // ...
 
-        // Draw graphics from gfx array
+        // TODO Cycle once
+        // ...
+
+        // Draw graphics
         rl.beginDrawing();
         defer rl.endDrawing();
 
-        if (cpu.should_draw == 1) {
-            image = try imageFromGFX(&cpu);
-            tex = try rl.loadTextureFromImage(image);
-            std.debug.print("Drew texture from image", .{});
+        rl.clearBackground(rl.Color.black);
+
+        // Only process changes when cpu needs it
+        if (cpu.should_draw > 0) {
+            GeneratePixelGrid(&cpu);
         }
 
-        rl.drawTexture(tex, 0, 0, rl.Color.white);
-        cpu.should_draw = 0;
+        if (cpu.should_draw - 1 > 0) cpu.should_draw -= 1;
     }
 }
 
-pub fn imageFromGFX(cpu: *chip8) !rl.Image {
-    // initRaw wants a null terminated file as its first arg
-    // however cpu.gfx is a 2048 byte array of pixel data
-    // not sure how I can make an array that it'll accept :[
-    const img = try rl.Image.initRaw(
-        cpu.gfx, // DOESNT LIKE THIS!
-        64,
-        32,
-        rl.PixelFormat.uncompressed_grayscale,
-        0,
-    );
+// Possible solution to drawing
+// An array of rectangle objects, each with a coordinate and a width/height
+// where width/height are screen_width / 64 and screen_height / 32
+// this array is drawn to the screen as a grid of pixel rects
+// every time the cpu says we should draw, we go through the cpu.gfx array
+// and the rect array, setting the colour of each according to
+// the value of the gfx array
+// GeneratePixelGrid() return pixelgrid array - nested for loops setting x, y coordinates etc
+// UpdatePixelGrid(*pixel_grid) void
 
-    return img;
+pub fn GeneratePixelGrid(cpu: *chip8) void {
+    var y: usize = 0;
+    while (y < 32) : (y += 1) {
+        var x: usize = 0;
+        while (x < 64) : (x += 1) {
+            const index = y * 64 + x;
+            if (cpu.gfx[index] == 0) {
+                rl.drawRectangle(
+                    @intCast(x),
+                    @intCast(y),
+                    screen_width / 64,
+                    screen_height / 32,
+                    rl.Color.black,
+                );
+            }
+
+            if (cpu.gfx[index] == 1) {
+                rl.drawRectangle(
+                    @intCast(x),
+                    @intCast(y),
+                    screen_width / 64,
+                    screen_height / 32,
+                    rl.Color.white,
+                );
+            }
+        }
+    }
 }
 
-// Raylib needs only to capture input and draw graphics
-// We capture the inputs and tell our chip8's input array
-// Likewise, we read the gfx array and draw that.
-// We dont need to worry about the chip8 implementation
-// and only interface with its IO
-
-// For now, the emulator will only run on the predetermined ROM files
-// we feed it. It will be possible to run it from CLI and pass in filepath
-// but lets not overcomplicate it.
-
-// could use an enum for the 16 input keys and just directly set the
-// array using the enum value
-
-// for the gfx array, we could either draw rects in accordance with
-// the pixels, or we can build a bitmap? then draw the bitmap to the screen
-// to automatically scale it
-
-// Emulate cycle
-// Fetch opcode
-// Decode opcode
-// Run opcode
-// if shouldDraw = 1
-// update graphics array
+//pub fn UpdatePixelGrid(grid: []pixel) void {}
