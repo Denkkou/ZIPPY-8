@@ -4,6 +4,8 @@ const chip8 = @import("chip8.zig").CPU;
 
 const screen_width: u16 = 640;
 const screen_height: u16 = 320;
+const screen_scale_x: u16 = screen_width / 64;
+const screen_scale_y: u16 = screen_height / 32;
 
 pub fn main() !void {
     // Allocator
@@ -56,16 +58,7 @@ pub fn main() !void {
     }
 }
 
-// Possible solution to drawing
-// An array of rectangle objects, each with a coordinate and a width/height
-// where width/height are screen_width / 64 and screen_height / 32
-// this array is drawn to the screen as a grid of pixel rects
-// every time the cpu says we should draw, we go through the cpu.gfx array
-// and the rect array, setting the colour of each according to
-// the value of the gfx array
-// GeneratePixelGrid() return pixelgrid array - nested for loops setting x, y coordinates etc
-// UpdatePixelGrid(*pixel_grid) void
-
+// Create a grid of pixel rectangles to fill the screen
 pub fn GeneratePixelGrid(cpu: *chip8) void {
     var y: usize = 0;
     while (y < 32) : (y += 1) {
@@ -83,11 +76,12 @@ pub fn GeneratePixelGrid(cpu: *chip8) void {
                 colour = rl.Color.white;
             }
 
+            // Draw the pixel relative to position and scale
             rl.drawRectangle(
-                @intCast(x * 10),
-                @intCast(y * 10),
-                screen_width / 64,
-                screen_height / 32,
+                @intCast(x * screen_scale_x),
+                @intCast(y * screen_scale_y),
+                screen_scale_x,
+                screen_scale_y,
                 colour,
             );
         }
