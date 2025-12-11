@@ -67,23 +67,16 @@ pub fn GeneratePixelGrid(cpu: *chip8) void {
             // Parse index from coordinates
             const index = y * 64 + x;
 
-            // Set colour based on value in gfx
-            var colour: rl.Color = undefined;
-            if (cpu.gfx[index] == 0) {
-                colour = rl.Color.black;
-            }
+            // Draw a pixel if there is one there
             if (cpu.gfx[index] == 1) {
-                colour = rl.Color.white;
+                rl.drawRectangle(
+                    @intCast(x * screen_scale_x),
+                    @intCast(y * screen_scale_y),
+                    screen_scale_x,
+                    screen_scale_y,
+                    rl.Color.white,
+                );
             }
-
-            // Draw the pixel relative to position and scale
-            rl.drawRectangle(
-                @intCast(x * screen_scale_x),
-                @intCast(y * screen_scale_y),
-                screen_scale_x,
-                screen_scale_y,
-                colour,
-            );
         }
     }
 }
