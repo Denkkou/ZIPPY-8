@@ -26,10 +26,13 @@ pub const CPU = struct {
 
         // Zero-initialise all of the memory regions
         @memset(memory, 0);
-        @memset(gfx, 1);
+        @memset(gfx, 0);
         @memset(v_reg, 0);
         @memset(stack, 0);
         @memset(keys, 0);
+
+        // Load default font into memory
+        @memcpy(memory[0x000..0x050], chip_font[0..80]);
 
         // Fully initialise registers
         return Self{
@@ -56,4 +59,154 @@ pub const CPU = struct {
         self.allocator.free(self.stack);
         self.allocator.free(self.keys);
     }
+
+    // TODO Load a ROM into program memory from file
+    // ...
+
+    // Perform one emulation cycle
+    pub fn cycle(self: *Self) void {
+        // Fetch opcode
+        self.opcode = @shlExact(self.memory[self.pc], 0x0000) | self.memory[self.pc + 1];
+
+        // TODO Decode and execute
+        // ...
+
+        // TODO Update timers
+        // ...
+    }
+
+    // INSTRUCTIONS
+    // (N = 4-bits)
+    // (X = Lower 4-bits of high byte)
+    // (Y = Upper 4-bits of low byte)
+    // Clear the display
+    fn _00E0() void {}
+
+    // Return from a subroutine
+    fn _00EE() void {}
+
+    // Jump to location NNN
+    fn _1NNN(self: *@This()) void {
+        self.pc = (self.opcode & 0x0FFF);
+    }
+
+    // Call subroutine at NNN
+    fn _2NNN() void {}
+
+    // Skip next instruction if VX == NN
+    fn _3XNN() void {}
+
+    // Skip next instruction if VX != NN
+    fn _4XNN() void {}
+
+    // Skip next instruction if VX == VY
+    fn _5XY0() void {}
+
+    // Set VX = NN
+    fn _6XNN() void {}
+
+    // Set VX = VX + NN
+    fn _7XNN() void {}
+
+    // Set VX = VY
+    fn _8XY0() void {}
+
+    // Set VX = VX | VY
+    fn _8XY1() void {}
+
+    // Set VX = VX & VY
+    fn _8XY2() void {}
+
+    // Set VX = VX ^ VY
+    fn _8XY3() void {}
+
+    // Set VX = VX + VY, set VF = carry
+    fn _8XY4() void {}
+
+    // Set VX = VX - VY, set VF = !borrow
+    fn _8XY5() void {}
+
+    // Set VX = VX SHR 1
+    fn _8XY6() void {}
+
+    // Set VX = VY - VX, set VF = !borrow
+    fn _8XY7() void {}
+
+    // Set VX = VX SHL 1
+    fn _8XYE() void {}
+
+    // Skip next instruction if VX != VY
+    fn _9XY0() void {}
+
+    // Set I Register to NNN
+    fn _ANNN(self: *@This()) void {
+        self.I = (self.opcode & 0x0FFF);
+        self.pc += 2;
+    }
+
+    // Jump to location NNN + V[0]
+    fn _BNNN() void {}
+
+    // Set VX = (random byte & NN)
+    fn _CXNN() void {}
+
+    // Display N-byte starting at memory location I, at (VX, VY), VF = collision
+    fn _DXYN() void {}
+
+    // Skip next instruction if key with value VX is pressed
+    fn _EX9E() void {}
+
+    // Skip next instruction if key with value VX is not pressed
+    fn _EXA1() void {}
+
+    // Set VX = delay timer value
+    fn _FX07() void {}
+
+    // Wait for a keypress, store valye of the key in VX
+    fn _FX0A() void {}
+
+    // Set delay timer = VX
+    fn _FX15() void {}
+
+    // Set sound timer = VX
+    fn _FX18() void {}
+
+    // Set I = I + VX
+    fn _FX1E() void {}
+
+    // Set I = location of sprite for Digit VX
+    fn _FX29() void {}
+
+    // Store BCD representation of VX in memory locations I, I+1, I+2
+    fn _FX33() void {}
+
+    // Store registers V0 through VX in memory starting at I
+    fn _FX55() void {}
+
+    // Read registers V0 through VX from memory starting at I
+    fn _FX65() void {}
+
+    fn unhandledOpcode(self: *Self) void {
+        std.debug.print("Opcode not handled: 0x{X}\n", .{self.opcode});
+    }
+};
+
+// Default fontset used by the Chip-8
+const chip_font = [80]u8{
+    0xF0, 0x90, 0x90, 0x90, 0xF0, // 0
+    0x20, 0x60, 0x20, 0x20, 0x70, // 1
+    0xF0, 0x10, 0xF0, 0x80, 0xF0, // 2
+    0xF0, 0x10, 0xF0, 0x10, 0xF0, // 3
+    0x90, 0x90, 0xF0, 0x10, 0x10, // 4
+    0xF0, 0x80, 0xF0, 0x10, 0xF0, // 5
+    0xF0, 0x80, 0xF0, 0x90, 0xF0, // 6
+    0xF0, 0x10, 0x20, 0x40, 0x40, // 7
+    0xF0, 0x90, 0xF0, 0x90, 0xF0, // 8
+    0xF0, 0x90, 0xF0, 0x10, 0xF0, // 9
+    0xF0, 0x90, 0xF0, 0x90, 0x90, // A
+    0xE0, 0x90, 0xE0, 0x90, 0xE0, // B
+    0xF0, 0x80, 0x80, 0x80, 0xF0, // C
+    0xE0, 0x90, 0x90, 0x90, 0xE0, // D
+    0xF0, 0x80, 0xF0, 0x80, 0xF0, // E
+    0xF0, 0x80, 0xF0, 0x80, 0x80, // F
 };

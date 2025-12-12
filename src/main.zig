@@ -43,8 +43,8 @@ pub fn main() !void {
         // TODO Get Input
         // ...
 
-        // TODO Cycle once
-        // ...
+        // Cycle once
+        cpu.cycle();
 
         // Draw graphics
         rl.beginDrawing();
