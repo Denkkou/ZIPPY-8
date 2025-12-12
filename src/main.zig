@@ -1,11 +1,12 @@
 const std = @import("std");
 const rl = @import("raylib");
-const chip8 = @import("chip8.zig").CPU;
+const Chip8 = @import("chip8.zig").CPU;
 
 const screen_width: u16 = 640;
 const screen_height: u16 = 320;
 const screen_scale_x: u16 = screen_width / 64;
 const screen_scale_y: u16 = screen_height / 32;
+const target_fps: u8 = 60; // Chip-8's cpu runs at 60Hz
 
 pub fn main() !void {
     // Allocator
@@ -21,7 +22,7 @@ pub fn main() !void {
     }
 
     // Initialise CPU
-    var cpu = try chip8.create(allocator);
+    var cpu = try Chip8.create(allocator);
     defer cpu.free();
 
     // TODO Load ROM
@@ -34,9 +35,11 @@ pub fn main() !void {
         "CHIP-8 Emulator",
     );
     defer rl.closeWindow();
+    rl.setTargetFPS(target_fps);
 
     // Core loop
     while (!rl.windowShouldClose()) {
+
         // TODO Get Input
         // ...
 
@@ -48,18 +51,12 @@ pub fn main() !void {
         defer rl.endDrawing();
 
         rl.clearBackground(rl.Color.black);
-
-        // Only process changes when cpu needs it
-        if (cpu.should_draw > 0) {
-            GeneratePixelGrid(&cpu);
-        }
-
-        if (cpu.should_draw - 1 > 0) cpu.should_draw -= 1;
+        GeneratePixelGrid(&cpu);
     }
 }
 
 // Create a grid of pixel rectangles to fill the screen
-pub fn GeneratePixelGrid(cpu: *chip8) void {
+pub fn GeneratePixelGrid(cpu: *Chip8) void {
     var y: usize = 0;
     while (y < 32) : (y += 1) {
         var x: usize = 0;
@@ -80,5 +77,3 @@ pub fn GeneratePixelGrid(cpu: *chip8) void {
         }
     }
 }
-
-//pub fn UpdatePixelGrid(grid: []pixel) void {}

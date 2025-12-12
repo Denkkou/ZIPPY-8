@@ -16,7 +16,6 @@ pub const CPU = struct {
     stack: []u16,
     stack_pointer: u8,
     keys: []u8,
-    should_draw: u8,
 
     pub fn create(allocator: std.mem.Allocator) !Self {
         const memory = try allocator.alloc(u8, 4096);
@@ -27,7 +26,7 @@ pub const CPU = struct {
 
         // Zero-initialise all of the memory regions
         @memset(memory, 0);
-        @memset(gfx, 0);
+        @memset(gfx, 1);
         @memset(v_reg, 0);
         @memset(stack, 0);
         @memset(keys, 0);
@@ -46,10 +45,6 @@ pub const CPU = struct {
             .stack = stack,
             .stack_pointer = 0,
             .keys = keys,
-
-            // To fix flickering, counts from 2 to 0.
-            // As such, set to 2 when needing to update gfx!
-            .should_draw = 2,
         };
     }
 
