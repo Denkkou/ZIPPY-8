@@ -26,7 +26,7 @@ pub fn main() !void {
     defer cpu.free();
 
     // TODO Load ROM
-    // ...
+    // ... cpu.LoadROM(filepath)
 
     // Initialise Raylib
     rl.initWindow(

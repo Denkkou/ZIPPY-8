@@ -18,6 +18,10 @@ pub const CPU = struct {
     keys: []u8,
 
     pub fn create(allocator: std.mem.Allocator) !Self {
+        // Memory Layout (4096bytes)
+        // 0x000 - 0x1FF (CHIP-8 interpreter)
+        // 0x050 - 0x0A0 (Default fontset)
+        // 0x200 - 0xFFF (Program ROM and RAM)
         const memory = try allocator.alloc(u8, 4096);
         const gfx = try allocator.alloc(u8, 2048);
         const v_reg = try allocator.alloc(u8, 16);
@@ -32,7 +36,7 @@ pub const CPU = struct {
         @memset(keys, 0);
 
         // Load default font into memory
-        @memcpy(memory[0x000..0x050], chip_font[0..80]);
+        @memcpy(memory[0x050..0x0A0], chip_font[0..80]);
 
         // Fully initialise registers
         return Self{
@@ -61,12 +65,15 @@ pub const CPU = struct {
     }
 
     // TODO Load a ROM into program memory from file
-    // ...
+    // ... pub fn loadROM(self: *Self, filepath: ???)
 
     // Perform one emulation cycle
     pub fn cycle(self: *Self) void {
         // Fetch opcode
         self.opcode = @shlExact(self.memory[self.pc], 0x0000) | self.memory[self.pc + 1];
+
+        // Increment program counter
+        self.pc += 2;
 
         // TODO Decode and execute
         // ...
@@ -79,8 +86,11 @@ pub const CPU = struct {
     // (N = 4-bits)
     // (X = Lower 4-bits of high byte)
     // (Y = Upper 4-bits of low byte)
+
     // Clear the display
-    fn _00E0() void {}
+    fn _00E0(self: *Self) void {
+        @memset(self.gfx, 0);
+    }
 
     // Return from a subroutine
     fn _00EE() void {}
