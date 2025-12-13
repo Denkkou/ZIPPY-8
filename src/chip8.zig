@@ -70,7 +70,7 @@ pub const CPU = struct {
     // Perform one emulation cycle
     pub fn cycle(self: *Self) void {
         // Fetch opcode
-        self.opcode = @shlExact(self.memory[self.pc], 0x0000) | self.memory[self.pc + 1];
+        self.opcode = @shlExact(@as(u16, self.memory[self.pc]), 8) | self.memory[self.pc + 1];
 
         // Increment program counter
         self.pc += 2;
