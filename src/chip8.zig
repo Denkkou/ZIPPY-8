@@ -17,6 +17,7 @@ pub const CPU = struct {
     stack_pointer: u8,
     keys: []u8,
 
+    // Create and initialise CHIP-8 CPU
     pub fn create(allocator: std.mem.Allocator) !Self {
         // Memory Layout (4096bytes)
         // 0x000 - 0x1FF (CHIP-8 interpreter)
@@ -62,6 +63,16 @@ pub const CPU = struct {
         self.allocator.free(self.V);
         self.allocator.free(self.stack);
         self.allocator.free(self.keys);
+    }
+
+    // Dump contents of memory to console, pair with breakpoint
+    pub fn dumpMemory(self: *Self) void {
+        // TODO Format output to print in rows of 16 bytes
+        // ...
+
+        for (self.memory) |byte| {
+            std.debug.print("0x{x} ", .{byte});
+        }
     }
 
     // TODO Load a ROM into program memory from file
