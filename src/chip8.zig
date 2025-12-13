@@ -67,11 +67,15 @@ pub const CPU = struct {
 
     // Dump contents of memory to console, pair with breakpoint
     pub fn dumpMemory(self: *Self) void {
-        // TODO Format output to print in rows of 16 bytes
-        // ...
-
+        var counter: usize = 0;
         for (self.memory) |byte| {
-            std.debug.print("0x{X} ", .{byte});
+            counter += 1;
+            if (counter < 16) {
+                std.debug.print("{X:0>2} ", .{byte});
+            } else {
+                std.debug.print("{X:0>2}\n", .{byte});
+                counter = 0;
+            }
         }
     }
 
@@ -92,7 +96,6 @@ pub const CPU = struct {
         _ = reader.readSliceAll(buffer[0..]) catch 0;
 
         // Copy contents of buffer into memory
-        //const buffer_length = buffer.len;
         @memcpy(self.memory[0x200..], buffer[0..]);
     }
 
