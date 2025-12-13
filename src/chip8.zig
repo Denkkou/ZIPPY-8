@@ -71,12 +71,30 @@ pub const CPU = struct {
         // ...
 
         for (self.memory) |byte| {
-            std.debug.print("0x{x} ", .{byte});
+            std.debug.print("0x{X} ", .{byte});
         }
     }
 
-    // TODO Load a ROM into program memory from file
-    // ... pub fn loadROM(self: *Self, filepath: ???)
+    // Load a ROM into program memory from file
+    pub fn loadROM(self: *Self, filepath: []const u8) !void {
+        // Open the file at given path
+        const file = try std.fs.cwd().openFile(
+            filepath,
+            .{ .mode = .read_only },
+        );
+        defer file.close();
+
+        // Create and read into a buffer
+        var buffer: [4096 - 0x200]u8 = undefined;
+        var fr = file.reader(std.testing.io, &buffer);
+        var reader = &fr.interface;
+        @memset(buffer[0..], 0); // Zero-out buffer
+        _ = reader.readSliceAll(buffer[0..]) catch 0;
+
+        // Copy contents of buffer into memory
+        //const buffer_length = buffer.len;
+        @memcpy(self.memory[0x200..], buffer[0..]);
+    }
 
     // Perform one emulation cycle
     pub fn cycle(self: *Self) void {

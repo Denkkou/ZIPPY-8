@@ -26,7 +26,8 @@ pub fn main() !void {
     defer cpu.free();
 
     // TODO Load ROM
-    // ... cpu.LoadROM(filepath)
+    try cpu.loadROM("roms/1-chip8-logo.ch8");
+    cpu.dumpMemory();
 
     // Initialise Raylib
     rl.initWindow(
