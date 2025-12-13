@@ -25,7 +25,7 @@ pub fn main() !void {
     var cpu = try Chip8.create(allocator);
     defer cpu.free();
 
-    // TODO Load ROM
+    // Load ROM
     try cpu.loadROM("roms/1-chip8-logo.ch8");
     cpu.dumpMemory();
 
