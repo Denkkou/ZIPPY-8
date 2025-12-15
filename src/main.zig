@@ -41,8 +41,7 @@ pub fn main() !void {
     // Core loop
     while (!rl.windowShouldClose()) {
 
-        // TODO Get Input
-        // ...
+        // Get Input
         handleInput(&cpu);
 
         // Cycle once
