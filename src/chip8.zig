@@ -107,8 +107,56 @@ pub const CPU = struct {
         // Increment program counter
         self.pc += 2;
 
-        // TODO Decode and execute
-        // ...
+        // Decode and execute
+        switch (self.opcode & 0xF000) { // Check first byte,
+            0x0000 => switch (self.opcode & 0x000F) { // Check last if needed
+                0x0000 => _00E0(self),
+                0x000E => _00EE(),
+                else => unhandledOpcode(self),
+            },
+            0x1000 => _1NNN(self),
+            0x2000 => _2NNN(),
+            0x3000 => _3XNN(),
+            0x4000 => _4XNN(),
+            0x5000 => _5XY0(),
+            0x6000 => _6XNN(),
+            0x7000 => _7XNN(),
+            0x8000 => switch (self.opcode & 0x000F) {
+                0x0000 => _8XY0(),
+                0x0001 => _8XY1(),
+                0x0002 => _8XY2(),
+                0x0003 => _8XY3(),
+                0x0004 => _8XY4(),
+                0x0005 => _8XY5(),
+                0x0006 => _8XY6(),
+                0x0007 => _8XY7(),
+                0x000E => _8XYE(),
+                else => unhandledOpcode(self),
+            },
+            0x9000 => _9XY0(),
+            0xA000 => _ANNN(self),
+            0xB000 => _BNNN(),
+            0xC000 => _CXNN(),
+            0xD000 => _DXYN(),
+            0xE000 => switch (self.opcode & 0x000F) {
+                0x000E => _EX9E(),
+                0x0001 => _EXA1(),
+                else => unhandledOpcode(self),
+            },
+            0xF000 => switch (self.opcode & 0x00FF) { // Or check last 2 bytes
+                0x0007 => _FX07(),
+                0x000A => _FX0A(),
+                0x0015 => _FX15(),
+                0x0018 => _FX18(),
+                0x001E => _FX1E(),
+                0x0029 => _FX29(),
+                0x0033 => _FX33(),
+                0x0055 => _FX55(),
+                0x0065 => _FX65(),
+                else => unhandledOpcode(self),
+            },
+            else => unhandledOpcode(self),
+        }
 
         // Update timers
         if (self.delay_timer > 0) {
@@ -134,7 +182,7 @@ pub const CPU = struct {
     fn _00EE() void {}
 
     // Jump to location NNN
-    fn _1NNN(self: *@This()) void {
+    fn _1NNN(self: *Self) void {
         self.pc = (self.opcode & 0x0FFF);
     }
 
@@ -187,7 +235,7 @@ pub const CPU = struct {
     fn _9XY0() void {}
 
     // Set I Register to NNN
-    fn _ANNN(self: *@This()) void {
+    fn _ANNN(self: *Self) void {
         self.I = (self.opcode & 0x0FFF);
         self.pc += 2;
     }
