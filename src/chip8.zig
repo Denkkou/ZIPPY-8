@@ -110,8 +110,14 @@ pub const CPU = struct {
         // TODO Decode and execute
         // ...
 
-        // TODO Update timers
-        // ...
+        // Update timers
+        if (self.delay_timer > 0) {
+            self.delay_timer -= 1;
+        }
+
+        if (self.sound_timer > 0) {
+            self.sound_timer -= 1;
+        }
     }
 
     // INSTRUCTIONS
