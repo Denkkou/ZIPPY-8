@@ -43,6 +43,7 @@ pub fn main() !void {
 
         // TODO Get Input
         // ...
+        handleInput(&cpu);
 
         // Cycle once
         cpu.cycle();
@@ -52,12 +53,41 @@ pub fn main() !void {
         defer rl.endDrawing();
 
         rl.clearBackground(rl.Color.black);
-        GeneratePixelGrid(&cpu);
+        generatePixelGrid(&cpu);
     }
 }
 
+// Update cpu's keys register with raylib input
+pub fn handleInput(cpu: *Chip8) void {
+    // 4x4 Hex keypad will instead be QWERTY columns 1 through 4
+    // 1 2 3 C  ->  1 2 3 4
+    // 4 5 6 D      Q W E R
+    // 7 8 9 E      A S D F
+    // A 0 B F      Z X C V
+
+    cpu.keys[0x1] = if (rl.isKeyDown(rl.KeyboardKey.one)) 1 else 0;
+    cpu.keys[0x2] = if (rl.isKeyDown(rl.KeyboardKey.two)) 1 else 0;
+    cpu.keys[0x3] = if (rl.isKeyDown(rl.KeyboardKey.three)) 1 else 0;
+    cpu.keys[0xC] = if (rl.isKeyDown(rl.KeyboardKey.four)) 1 else 0;
+
+    cpu.keys[0x4] = if (rl.isKeyDown(rl.KeyboardKey.q)) 1 else 0;
+    cpu.keys[0x5] = if (rl.isKeyDown(rl.KeyboardKey.w)) 1 else 0;
+    cpu.keys[0x6] = if (rl.isKeyDown(rl.KeyboardKey.e)) 1 else 0;
+    cpu.keys[0xD] = if (rl.isKeyDown(rl.KeyboardKey.r)) 1 else 0;
+
+    cpu.keys[0x7] = if (rl.isKeyDown(rl.KeyboardKey.a)) 1 else 0;
+    cpu.keys[0x8] = if (rl.isKeyDown(rl.KeyboardKey.s)) 1 else 0;
+    cpu.keys[0x9] = if (rl.isKeyDown(rl.KeyboardKey.d)) 1 else 0;
+    cpu.keys[0xE] = if (rl.isKeyDown(rl.KeyboardKey.f)) 1 else 0;
+
+    cpu.keys[0xA] = if (rl.isKeyDown(rl.KeyboardKey.z)) 1 else 0;
+    cpu.keys[0x0] = if (rl.isKeyDown(rl.KeyboardKey.x)) 1 else 0;
+    cpu.keys[0xB] = if (rl.isKeyDown(rl.KeyboardKey.c)) 1 else 0;
+    cpu.keys[0xF] = if (rl.isKeyDown(rl.KeyboardKey.v)) 1 else 0;
+}
+
 // Create a grid of pixel rectangles to fill the screen
-pub fn GeneratePixelGrid(cpu: *Chip8) void {
+pub fn generatePixelGrid(cpu: *Chip8) void {
     var y: usize = 0;
     while (y < 32) : (y += 1) {
         var x: usize = 0;
