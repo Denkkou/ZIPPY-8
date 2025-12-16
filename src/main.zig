@@ -101,7 +101,7 @@ pub fn generatePixelGrid(cpu: *Chip8) void {
                     @intCast(y * screen_scale_y),
                     screen_scale_x,
                     screen_scale_y,
-                    rl.Color.white,
+                    rl.Color.orange,
                 );
             }
         }
