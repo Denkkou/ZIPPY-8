@@ -119,8 +119,8 @@ pub const CPU = struct {
             0x3000 => _3XNN(),
             0x4000 => _4XNN(),
             0x5000 => _5XY0(),
-            0x6000 => _6XNN(),
-            0x7000 => _7XNN(),
+            0x6000 => _6XNN(self),
+            0x7000 => _7XNN(self),
             0x8000 => switch (self.opcode & 0x000F) {
                 0x0000 => _8XY0(),
                 0x0001 => _8XY1(),
@@ -137,7 +137,7 @@ pub const CPU = struct {
             0xA000 => _ANNN(self),
             0xB000 => _BNNN(),
             0xC000 => _CXNN(),
-            0xD000 => _DXYN(),
+            0xD000 => _DXYN(self),
             0xE000 => switch (self.opcode & 0x000F) {
                 0x000E => _EX9E(),
                 0x0001 => _EXA1(),
@@ -199,10 +199,18 @@ pub const CPU = struct {
     fn _5XY0() void {}
 
     // Set VX = NN
-    fn _6XNN() void {}
+    fn _6XNN(self: *Self) void {
+        const X = @shrExact((self.opcode & 0x0F00), 8);
+        const NN: u8 = @intCast(self.opcode & 0x00FF);
+        self.V[X] = NN;
+    }
 
     // Set VX = VX + NN
-    fn _7XNN() void {}
+    fn _7XNN(self: *Self) void {
+        const X = @shrExact((self.opcode & 0x0F00), 8);
+        const NN: u8 = @intCast(self.opcode & 0x00FF);
+        self.V[X] = NN + self.V[X];
+    }
 
     // Set VX = VY
     fn _8XY0() void {}
@@ -237,7 +245,7 @@ pub const CPU = struct {
     // Set I Register to NNN
     fn _ANNN(self: *Self) void {
         self.I = (self.opcode & 0x0FFF);
-        self.pc += 2;
+        //self.pc += 2;
     }
 
     // Jump to location NNN + V[0]
@@ -246,8 +254,44 @@ pub const CPU = struct {
     // Set VX = (random byte & NN)
     fn _CXNN() void {}
 
-    // Display N-byte starting at memory location I, at (VX, VY), VF = collision
-    fn _DXYN() void {}
+    // Display N-byte sprite starting at memory location I, at (VX, VY), VF = collision
+    fn _DXYN(self: *Self) void {
+        // Thanks to @IridescentRose's implementation
+        // https://github.com/IridescentRose/CHIP-8z
+
+        self.V[0xF] = 0;
+
+        // Extract values from opcode
+        const X = self.V[(self.opcode & 0x0F00) >> 8];
+        const Y = self.V[(self.opcode & 0x00F0) >> 4];
+        const height = self.opcode & 0x000F;
+
+        var y: usize = 0;
+        while (y < height) : (y += 1) {
+            const spr = self.memory[self.I + y];
+
+            var x: usize = 0;
+            while (x < 8) : (x += 1) {
+                const v: u8 = 0x80;
+
+                if ((spr & (v >> @intCast(x))) != 0) {
+                    const tX = (X + x) % 64;
+                    const tY = (Y + y) % 32;
+
+                    // Index in the gfx array
+                    const i = tX + tY * 64;
+
+                    // XOR with current value
+                    self.gfx[i] ^= 1;
+
+                    // Collision flag
+                    if (self.gfx[i] == 0) {
+                        self.V[0xF] = 1;
+                    }
+                }
+            }
+        }
+    }
 
     // Skip next instruction if key with value VX is pressed
     fn _EX9E() void {}

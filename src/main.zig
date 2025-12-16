@@ -26,7 +26,7 @@ pub fn main() !void {
     defer cpu.free();
 
     // Load ROM
-    try cpu.loadROM("roms/1-chip8-logo.ch8");
+    try cpu.loadROM("roms/2-ibm-logo.ch8");
     cpu.dumpMemory();
 
     // Initialise Raylib
