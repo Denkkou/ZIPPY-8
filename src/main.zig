@@ -27,7 +27,6 @@ pub fn main() !void {
 
     // Load ROM
     try cpu.loadROM("roms/2-ibm-logo.ch8");
-    cpu.dumpMemory();
 
     // Initialise Raylib
     rl.initWindow(
@@ -83,6 +82,11 @@ pub fn handleInput(cpu: *Chip8) void {
     cpu.keys[0x0] = if (rl.isKeyDown(rl.KeyboardKey.x)) 1 else 0;
     cpu.keys[0xB] = if (rl.isKeyDown(rl.KeyboardKey.c)) 1 else 0;
     cpu.keys[0xF] = if (rl.isKeyDown(rl.KeyboardKey.v)) 1 else 0;
+
+    // Special debug keybinds
+    if (rl.isKeyPressed(rl.KeyboardKey.m)) {
+        cpu.dumpMemory();
+    }
 }
 
 // Create a grid of pixel rectangles to fill the screen
