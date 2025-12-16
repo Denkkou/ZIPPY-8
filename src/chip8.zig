@@ -108,7 +108,7 @@ pub const CPU = struct {
         self.pc += 2;
 
         // Decode and execute
-        switch (self.opcode & 0xF000) { // Check first byte,
+        switch (self.opcode & 0xF000) { // Check first nibble
             0x0000 => switch (self.opcode & 0x000F) { // Check last if needed
                 0x0000 => _00E0(self),
                 0x000E => _00EE(),
@@ -143,7 +143,7 @@ pub const CPU = struct {
                 0x0001 => _EXA1(),
                 else => unhandledOpcode(self),
             },
-            0xF000 => switch (self.opcode & 0x00FF) { // Or check last 2 bytes
+            0xF000 => switch (self.opcode & 0x00FF) { // Or check last whole byte
                 0x0007 => _FX07(),
                 0x000A => _FX0A(),
                 0x0015 => _FX15(),
