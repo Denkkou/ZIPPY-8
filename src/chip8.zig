@@ -111,29 +111,29 @@ pub const CPU = struct {
         switch (self.opcode & 0xF000) { // Check first nibble
             0x0000 => switch (self.opcode & 0x000F) { // Check last if needed
                 0x0000 => _00E0(self),
-                0x000E => _00EE(),
+                0x000E => _00EE(self),
                 else => unhandledOpcode(self),
             },
             0x1000 => _1NNN(self),
-            0x2000 => _2NNN(),
-            0x3000 => _3XNN(),
-            0x4000 => _4XNN(),
-            0x5000 => _5XY0(),
+            0x2000 => _2NNN(self),
+            0x3000 => _3XNN(self),
+            0x4000 => _4XNN(self),
+            0x5000 => _5XY0(self),
             0x6000 => _6XNN(self),
             0x7000 => _7XNN(self),
             0x8000 => switch (self.opcode & 0x000F) {
-                0x0000 => _8XY0(),
-                0x0001 => _8XY1(),
-                0x0002 => _8XY2(),
-                0x0003 => _8XY3(),
+                0x0000 => _8XY0(self),
+                0x0001 => _8XY1(self),
+                0x0002 => _8XY2(self),
+                0x0003 => _8XY3(self),
                 0x0004 => _8XY4(),
                 0x0005 => _8XY5(),
-                0x0006 => _8XY6(),
+                0x0006 => _8XY6(self),
                 0x0007 => _8XY7(),
-                0x000E => _8XYE(),
+                0x000E => _8XYE(self),
                 else => unhandledOpcode(self),
             },
-            0x9000 => _9XY0(),
+            0x9000 => _9XY0(self),
             0xA000 => _ANNN(self),
             0xB000 => _BNNN(),
             0xC000 => _CXNN(),
@@ -179,7 +179,10 @@ pub const CPU = struct {
     }
 
     // Return from a subroutine
-    fn _00EE() void {}
+    fn _00EE(self: *Self) void {
+        self.stack_pointer -= 1;
+        self.pc = self.stack[self.stack_pointer];
+    }
 
     // Jump to location NNN
     fn _1NNN(self: *Self) void {
@@ -187,42 +190,88 @@ pub const CPU = struct {
     }
 
     // Call subroutine at NNN
-    fn _2NNN() void {}
+    fn _2NNN(self: *Self) void {
+        self.stack[self.stack_pointer] = self.pc;
+        self.stack_pointer += 1;
+        self.pc = self.opcode & 0x0FFF;
+    }
 
     // Skip next instruction if VX == NN
-    fn _3XNN() void {}
+    fn _3XNN(self: *Self) void {
+        const X = @shrExact(self.opcode & 0x0F00, 8);
+        const NN = self.opcode & 0x00FF;
+
+        if (self.V[X] == NN) {
+            self.pc += 2;
+        }
+    }
 
     // Skip next instruction if VX != NN
-    fn _4XNN() void {}
+    fn _4XNN(self: *Self) void {
+        const X = @shrExact(self.opcode & 0x0F00, 8);
+        const NN = self.opcode & 0x00FF;
+
+        if (self.V[X] != NN) {
+            self.pc += 2;
+        }
+    }
 
     // Skip next instruction if VX == VY
-    fn _5XY0() void {}
+    fn _5XY0(self: *Self) void {
+        const X = @shrExact(self.opcode & 0x0F00, 8);
+        const Y = @shrExact(self.opcode & 0x00F0, 4);
+
+        if (self.V[X] == self.V[Y]) {
+            self.pc += 2;
+        }
+    }
 
     // Set VX = NN
     fn _6XNN(self: *Self) void {
         const X = @shrExact((self.opcode & 0x0F00), 8);
-        const NN: u8 = @intCast(self.opcode & 0x00FF);
-        self.V[X] = NN;
+        const NN = self.opcode & 0x00FF;
+        self.V[X] = @intCast(NN);
     }
 
     // Set VX = VX + NN
     fn _7XNN(self: *Self) void {
+        @setRuntimeSafety(false); // Removes integer overflow panic
         const X = @shrExact((self.opcode & 0x0F00), 8);
-        const NN: u8 = @intCast(self.opcode & 0x00FF);
-        self.V[X] = NN + self.V[X];
+        const NN = self.opcode & 0x00FF;
+        self.V[X] += @intCast(NN);
     }
 
     // Set VX = VY
-    fn _8XY0() void {}
+    fn _8XY0(self: *Self) void {
+        const X = @shrExact(self.opcode & 0x0F00, 8);
+        const Y = @shrExact(self.opcode & 0x00F0, 4);
+
+        self.V[X] = self.V[Y];
+    }
 
     // Set VX = VX | VY
-    fn _8XY1() void {}
+    fn _8XY1(self: *Self) void {
+        const X = @shrExact(self.opcode & 0x0F00, 8);
+        const Y = @shrExact(self.opcode & 0x00F0, 4);
+
+        self.V[X] |= self.V[Y];
+    }
 
     // Set VX = VX & VY
-    fn _8XY2() void {}
+    fn _8XY2(self: *Self) void {
+        const X = @shrExact(self.opcode & 0x0F00, 8);
+        const Y = @shrExact(self.opcode & 0x00F0, 4);
+
+        self.V[X] &= self.V[Y];
+    }
 
     // Set VX = VX ^ VY
-    fn _8XY3() void {}
+    fn _8XY3(self: *Self) void {
+        const X = @shrExact(self.opcode & 0x0F00, 8);
+        const Y = @shrExact(self.opcode & 0x00F0, 4);
+
+        self.V[X] ^= self.V[Y];
+    }
 
     // Set VX = VX + VY, set VF = carry
     fn _8XY4() void {}
@@ -231,21 +280,43 @@ pub const CPU = struct {
     fn _8XY5() void {}
 
     // Set VX = VX SHR 1
-    fn _8XY6() void {}
+    fn _8XY6(self: *Self) void {
+        const X = @shrExact(self.opcode & 0x0F00, 8);
+
+        // If least significant bit is 1, store 1 in V[F], else 0
+        self.V[0xF] = self.V[X] & 0x1;
+
+        // Bitshift right one (divide by 2)
+        self.V[X] >>= 1; // No @shrExact as we want to shift a bit out
+    }
 
     // Set VX = VY - VX, set VF = !borrow
     fn _8XY7() void {}
 
     // Set VX = VX SHL 1
-    fn _8XYE() void {}
+    fn _8XYE(self: *Self) void {
+        const X = @shrExact(self.opcode & 0x0F00, 8);
+
+        // If most significant bit is 1, store 1 in V[F], else 0
+        self.V[0xF] = @shrExact((self.V[X] & 0x80), 7);
+
+        // Bitshift left one (multiply by 2)
+        self.V[X] <<= 1; // No @shlExact as we want to shift a bit out
+    }
 
     // Skip next instruction if VX != VY
-    fn _9XY0() void {}
+    fn _9XY0(self: *Self) void {
+        const X = @shrExact(self.opcode & 0x0F00, 8);
+        const Y = @shrExact(self.opcode & 0x00F0, 4);
+
+        if (self.V[X] != self.V[Y]) {
+            self.pc += 2;
+        }
+    }
 
     // Set I Register to NNN
     fn _ANNN(self: *Self) void {
         self.I = (self.opcode & 0x0FFF);
-        //self.pc += 2;
     }
 
     // Jump to location NNN + V[0]
@@ -302,7 +373,7 @@ pub const CPU = struct {
     // Set VX = delay timer value
     fn _FX07() void {}
 
-    // Wait for a keypress, store valye of the key in VX
+    // Wait for a keypress, store value of the key in VX
     fn _FX0A() void {}
 
     // Set delay timer = VX
