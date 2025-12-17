@@ -126,10 +126,10 @@ pub const CPU = struct {
                 0x0001 => _8XY1(self),
                 0x0002 => _8XY2(self),
                 0x0003 => _8XY3(self),
-                0x0004 => _8XY4(),
-                0x0005 => _8XY5(),
+                0x0004 => _8XY4(self),
+                0x0005 => _8XY5(self),
                 0x0006 => _8XY6(self),
-                0x0007 => _8XY7(),
+                0x0007 => _8XY7(self),
                 0x000E => _8XYE(self),
                 else => unhandledOpcode(self),
             },
@@ -172,6 +172,9 @@ pub const CPU = struct {
     // (N = 4-bits)
     // (X = Lower 4-bits of high byte)
     // (Y = Upper 4-bits of low byte)
+
+    // TODO Find alternative solution to suppressing runtime safety for
+    // integer overflow panics.
 
     // Clear the display
     fn _00E0(self: *Self) void {
@@ -274,10 +277,38 @@ pub const CPU = struct {
     }
 
     // Set VX = VX + VY, set VF = carry
-    fn _8XY4() void {}
+    fn _8XY4(self: *Self) void {
+        @setRuntimeSafety(false); // Removes integer overflow panic
+        const X = @shrExact(self.opcode & 0x0F00, 8);
+        const Y = @shrExact(self.opcode & 0x00F0, 4);
+
+        const sum = self.V[X] + self.V[Y];
+
+        // If the sum exceeds a byte's capacity, set the carry flag
+        if (sum > 255) {
+            self.V[0xF] = 1;
+        } else {
+            self.V[0xF] = 0;
+        }
+
+        // Set V[X] to sum
+        self.V[X] = sum & 0xFF;
+    }
 
     // Set VX = VX - VY, set VF = !borrow
-    fn _8XY5() void {}
+    fn _8XY5(self: *Self) void {
+        @setRuntimeSafety(false); // Removes integer overflow panic
+        const X = @shrExact(self.opcode & 0x0F00, 8);
+        const Y = @shrExact(self.opcode & 0x00F0, 4);
+
+        if (self.V[X] > self.V[Y]) {
+            self.V[0xF] = 1;
+        } else {
+            self.V[0xF] = 0;
+        }
+
+        self.V[X] -= self.V[Y];
+    }
 
     // Set VX = VX SHR 1
     fn _8XY6(self: *Self) void {
@@ -291,7 +322,19 @@ pub const CPU = struct {
     }
 
     // Set VX = VY - VX, set VF = !borrow
-    fn _8XY7() void {}
+    fn _8XY7(self: *Self) void {
+        @setRuntimeSafety(false); // Removes integer overflow panic
+        const X = @shrExact(self.opcode & 0x0F00, 8);
+        const Y = @shrExact(self.opcode & 0x00F0, 4);
+
+        if (self.V[Y] > self.V[X]) {
+            self.V[0xF] = 1;
+        } else {
+            self.V[0xF] = 0;
+        }
+
+        self.V[X] = (self.V[Y] - self.V[X]);
+    }
 
     // Set VX = VX SHL 1
     fn _8XYE(self: *Self) void {
