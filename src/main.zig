@@ -26,7 +26,7 @@ pub fn main() !void {
     defer cpu.free();
 
     // Load ROM
-    try cpu.loadROM("roms/3-corax+.ch8");
+    try cpu.loadROM("roms/4-flags.ch8");
 
     // Initialise Raylib
     rl.initWindow(

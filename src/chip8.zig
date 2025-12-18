@@ -301,13 +301,13 @@ pub const CPU = struct {
         const X = @shrExact(self.opcode & 0x0F00, 8);
         const Y = @shrExact(self.opcode & 0x00F0, 4);
 
+        self.V[X] -= self.V[Y];
+
         if (self.V[X] > self.V[Y]) {
             self.V[0xF] = 1;
         } else {
             self.V[0xF] = 0;
         }
-
-        self.V[X] -= self.V[Y];
     }
 
     // Set VX = VX SHR 1
@@ -327,13 +327,13 @@ pub const CPU = struct {
         const X = @shrExact(self.opcode & 0x0F00, 8);
         const Y = @shrExact(self.opcode & 0x00F0, 4);
 
+        self.V[X] = (self.V[Y] - self.V[X]);
+
         if (self.V[Y] > self.V[X]) {
             self.V[0xF] = 1;
         } else {
             self.V[0xF] = 0;
         }
-
-        self.V[X] = (self.V[Y] - self.V[X]);
     }
 
     // Set VX = VX SHL 1
