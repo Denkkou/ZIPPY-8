@@ -6,7 +6,7 @@ const screen_width: u16 = 640;
 const screen_height: u16 = 320;
 const screen_scale_x: u16 = screen_width / 64;
 const screen_scale_y: u16 = screen_height / 32;
-const target_fps: u8 = 60; // Chip-8's cpu runs at 60Hz
+const target_fps: u8 = 120; // Chip-8's cpu runs at 60Hz
 
 pub fn main() !void {
     // Allocator

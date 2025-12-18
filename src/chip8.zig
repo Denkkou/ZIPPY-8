@@ -139,13 +139,13 @@ pub const CPU = struct {
             0xC000 => _CXNN(),
             0xD000 => _DXYN(self),
             0xE000 => switch (self.opcode & 0x000F) {
-                0x000E => _EX9E(),
-                0x0001 => _EXA1(),
+                0x000E => _EX9E(self),
+                0x0001 => _EXA1(self),
                 else => unhandledOpcode(self),
             },
             0xF000 => switch (self.opcode & 0x00FF) { // Or check last whole byte
                 0x0007 => _FX07(self),
-                0x000A => _FX0A(),
+                0x000A => _FX0A(self),
                 0x0015 => _FX15(self),
                 0x0018 => _FX18(self),
                 0x001E => _FX1E(self),
@@ -258,6 +258,7 @@ pub const CPU = struct {
         const Y = @shrExact(self.opcode & 0x00F0, 4);
 
         self.V[X] |= self.V[Y];
+        self.V[0xF] = 0;
     }
 
     // Set VX = VX & VY
@@ -266,6 +267,7 @@ pub const CPU = struct {
         const Y = @shrExact(self.opcode & 0x00F0, 4);
 
         self.V[X] &= self.V[Y];
+        self.V[0xF] = 0;
     }
 
     // Set VX = VX ^ VY
@@ -274,6 +276,7 @@ pub const CPU = struct {
         const Y = @shrExact(self.opcode & 0x00F0, 4);
 
         self.V[X] ^= self.V[Y];
+        self.V[0xF] = 0;
     }
 
     // Set VX = VX + VY, set VF = carry
@@ -292,7 +295,7 @@ pub const CPU = struct {
         }
 
         // Set V[X] to sum
-        self.V[X] = sum & 0xFF;
+        self.V[X] = @truncate(sum & 0x00FF);
     }
 
     // Set VX = VX - VY, set VF = !borrow
@@ -301,13 +304,13 @@ pub const CPU = struct {
         const X = @shrExact(self.opcode & 0x0F00, 8);
         const Y = @shrExact(self.opcode & 0x00F0, 4);
 
-        self.V[X] -= self.V[Y];
-
         if (self.V[X] > self.V[Y]) {
             self.V[0xF] = 1;
         } else {
             self.V[0xF] = 0;
         }
+
+        self.V[X] -= self.V[Y];
     }
 
     // Set VX = VX SHR 1
@@ -411,10 +414,22 @@ pub const CPU = struct {
     }
 
     // Skip next instruction if key with value VX is pressed
-    fn _EX9E() void {}
+    fn _EX9E(self: *Self) void {
+        const X = @shrExact(self.opcode & 0x0F00, 8);
+
+        if (self.keys[self.V[X]] == 1) {
+            self.pc += 2;
+        }
+    }
 
     // Skip next instruction if key with value VX is not pressed
-    fn _EXA1() void {}
+    fn _EXA1(self: *Self) void {
+        const X = @shrExact(self.opcode & 0x0F00, 8);
+
+        if (self.keys[self.V[X]] != 1) {
+            self.pc += 2;
+        }
+    }
 
     // Set VX = delay timer value
     fn _FX07(self: *Self) void {
@@ -423,7 +438,19 @@ pub const CPU = struct {
     }
 
     // Wait for a keypress, store value of the key in VX
-    fn _FX0A() void {}
+    fn _FX0A(self: *Self) void {
+        const X = @shrExact(self.opcode & 0x0F00, 8);
+
+        var pressed = false;
+
+        var i: usize = 0;
+        while (i < 16) : (i += 1) {
+            if (self.keys[i] != 0) {
+                self.V[X] = @truncate(i);
+                pressed = true;
+            }
+        }
+    }
 
     // Set delay timer = VX
     fn _FX15(self: *Self) void {
