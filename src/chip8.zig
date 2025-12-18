@@ -135,7 +135,7 @@ pub const CPU = struct {
             },
             0x9000 => _9XY0(self),
             0xA000 => _ANNN(self),
-            0xB000 => _BNNN(),
+            0xB000 => _BNNN(self),
             0xC000 => _CXNN(),
             0xD000 => _DXYN(self),
             0xE000 => switch (self.opcode & 0x000F) {
@@ -144,15 +144,15 @@ pub const CPU = struct {
                 else => unhandledOpcode(self),
             },
             0xF000 => switch (self.opcode & 0x00FF) { // Or check last whole byte
-                0x0007 => _FX07(),
+                0x0007 => _FX07(self),
                 0x000A => _FX0A(),
-                0x0015 => _FX15(),
-                0x0018 => _FX18(),
-                0x001E => _FX1E(),
-                0x0029 => _FX29(),
-                0x0033 => _FX33(),
-                0x0055 => _FX55(),
-                0x0065 => _FX65(),
+                0x0015 => _FX15(self),
+                0x0018 => _FX18(self),
+                0x001E => _FX1E(self),
+                0x0029 => _FX29(self),
+                0x0033 => _FX33(self),
+                0x0055 => _FX55(self),
+                0x0065 => _FX65(self),
                 else => unhandledOpcode(self),
             },
             else => unhandledOpcode(self),
@@ -363,7 +363,10 @@ pub const CPU = struct {
     }
 
     // Jump to location NNN + V[0]
-    fn _BNNN() void {}
+    fn _BNNN(self: *Self) void {
+        const NNN = self.opcode & 0x0FFF;
+        self.pc = self.V[0] + NNN;
+    }
 
     // Set VX = (random byte & NN)
     fn _CXNN() void {}
@@ -414,31 +417,80 @@ pub const CPU = struct {
     fn _EXA1() void {}
 
     // Set VX = delay timer value
-    fn _FX07() void {}
+    fn _FX07(self: *Self) void {
+        const X = @shrExact(self.opcode & 0x0F00, 8);
+        self.V[X] = self.delay_timer;
+    }
 
     // Wait for a keypress, store value of the key in VX
     fn _FX0A() void {}
 
     // Set delay timer = VX
-    fn _FX15() void {}
+    fn _FX15(self: *Self) void {
+        const X = @shrExact(self.opcode & 0x0F00, 8);
+        self.delay_timer = self.V[X];
+    }
 
     // Set sound timer = VX
-    fn _FX18() void {}
+    fn _FX18(self: *Self) void {
+        const X = @shrExact(self.opcode & 0x0F00, 8);
+        self.sound_timer = self.V[X];
+    }
 
     // Set I = I + VX
-    fn _FX1E() void {}
+    fn _FX1E(self: *Self) void {
+        const X = @shrExact(self.opcode & 0x0F00, 8);
+        self.I += self.V[X];
+    }
 
     // Set I = location of sprite for Digit VX
-    fn _FX29() void {}
+    fn _FX29(self: *Self) void {
+        const X = @shrExact(self.opcode & 0x0F00, 8);
+        const digit = self.V[X];
+
+        // Font sprites are at 0x50 in memory, and are 5 bytes wide
+        self.I = 0x50 + (5 * digit);
+    }
 
     // Store BCD representation of VX in memory locations I, I+1, I+2
-    fn _FX33() void {}
+    fn _FX33(self: *Self) void {
+        // Thanks to @AustinMorlan's solution
+        // https://austinmorlan.com/posts/chip8_emulator/
+
+        const X = @shrExact(self.opcode & 0x0F00, 8);
+        var value = self.V[X];
+
+        // Units
+        self.memory[self.I + 2] = value % 10;
+        value /= 10;
+
+        // Tens
+        self.memory[self.I + 1] = value % 10;
+        value /= 10;
+
+        // Hundreds
+        self.memory[self.I] = value % 10;
+    }
 
     // Store registers V0 through VX in memory starting at I
-    fn _FX55() void {}
+    fn _FX55(self: *Self) void {
+        const X = @shrExact(self.opcode & 0x0F00, 8);
+
+        var i: usize = 0;
+        while (i <= X) : (i += 1) {
+            self.memory[self.I + i] = self.V[i];
+        }
+    }
 
     // Read registers V0 through VX from memory starting at I
-    fn _FX65() void {}
+    fn _FX65(self: *Self) void {
+        const X = @shrExact(self.opcode & 0x0F00, 8);
+
+        var i: usize = 0;
+        while (i <= X) : (i += 1) {
+            self.V[i] = self.memory[self.I + i];
+        }
+    }
 
     fn unhandledOpcode(self: *Self) void {
         std.debug.print("Opcode not handled: 0x{X}\n", .{self.opcode});
