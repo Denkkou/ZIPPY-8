@@ -4,6 +4,20 @@ ZIPPY-8 is an emulator for the CHIP-8 written in Zig, using the Raylib library f
 ![Space Invaders, implementation by David Winter](/assets/space_invaders.png)
 
 
+# What I Learned
+This emulator was my first larger scale personal project, in a language I was unfamiliar with. I wanted
+to give something like this a go as I've always been interested in low level programming, and Zig
+looked really fun to learn.
+
+- Learned how emulation works, what considerations need to be made for accuracy, and how it scales up to more complex systems.
+- I learned how to navigate Zig's build system and import an external library (Raylib-zig).
+- Memory management in Zig; passing allocators, using the defer keyword and staying attentive to types and their size.
+- Bitshifting and bitwise operations, as well as generally handling hex and binary values.
+- Deconstructing a project like this into its components - Input, file reading, display, processing.
+- Reading technical specifications and documentation on both the CHIP-8 and Zig.
+- How CPUs function at a deeper level, and how machine code / assembly interacts with the system.
+
+
 # Usage
 As of right now, the implementation necessitates building from source.
 
@@ -32,20 +46,6 @@ Hex          QWERTY
 A 0 B F      Z X C V
 ```
 
-# What I Learned
-This emulator was my first larger scale personal project, in a language I was unfamiliar with. I wanted
-to give something like this a go as I've always been interested in low level programming, and Zig
-looked really fun to learn.
-
-- Learned how emulation works, what considerations need to be made for accuracy, and how it scales up to more complex systems.
-- I learned how to navigate Zig's build system and import an external library (Raylib-zig).
-- Memory management in Zig; passing allocators, using the defer keyword and staying attentive to types and their size.
-- Bitshifting and bitwise operations, as well as generally handling hex and binary values.
-- Deconstructing a project like this into its components - Input, file reading, display, processing.
-- Reading technical specifications and documentation on both the CHIP-8 and Zig.
-- How CPUs function at a deeper level, and how machine code / assembly interacts with the system.
-
-
 # Known Issues
 - Currently passes the Corax+ test from Timendus' testing suite, but...
 - Fails a few flag tests especially with opcodes 8XY4 and 8XY5.
@@ -65,10 +65,12 @@ looked really fun to learn.
 # Screenshots of the Testing Suite
 #### Opcodes:
 ![Opcode test results](assets/opcode_results.png)
+
 All opcodes pass function tests in the 'happy path'.
 
 #### Flags:
 ![Flag setting test results](assets/flags_results.png)
+
 HAPPY is for operations where a carry is not expected. Visa versa for CARRY. OTHER specifically checks FX1E.
 - First flag: Correct output value
 - Second flag: The carry flag in VF is correct
@@ -77,6 +79,7 @@ HAPPY is for operations where a carry is not expected. Visa versa for CARRY. OTH
 
 #### Quirks:
 ![Quirks test results](assets/quirks_results.png)
+
 Results when selecting the original CHIP-8. These quirks differ between variations and can be used to determine how faithful an implementation is to the intended system.
 
 
